@@ -1,45 +1,58 @@
 package domain
 
-import "testing"
+import (
+	"errors"
+	"strings"
+	"testing"
+)
 
-func TestNewFlag_ValidInputs(t *testing.T) {
-	want := struct{
+func TestNewFlag(t *testing.T) {
+	cases := []struct{
+		name        string
 		envID       int
 		rollout     int
 		key         string
 		description string
 		enabled     bool
+		wantErr     error
 	}{
-		envID: 1,
-		rollout: 50,
-		key: "feature x",
-		description: "some description",
-		enabled: true,
-	}
-	f, err := NewFlag(want.envID, want.rollout, want.key, want.description, want.enabled)
-	if err != nil {
-		t.Fatalf("expected no error, got %v", err)
+		{"valid input", 1, 50, "feature x", "some description", true, nil},
+		{"invalid rollout", 1, 101, "feature x", "some description", true, ErrInvalidRollout},
+		{"too long key", 1, 50, strings.Repeat("x", 101), "some description", true, ErrInvalidKey},
+		{"too long description", 1, 50, "feature x", strings.Repeat("x", 501), true, ErrInvalidDescription},
 	}
 
-	if f.EnvID() != want.envID {
-		t.Errorf("expected EnvID=%d, got %d", want.envID, f.EnvID())
-	}
-	if f.Rollout() != want.rollout {
-		t.Errorf("expected Rollout=%d, got %d", want.rollout, f.Rollout())
-	}
-	if f.Key() != want.key {
-		t.Errorf("expected Key=%q, got %q", want.key, f.Key())
-	}
-	if f.Description() != want.description {
-		t.Errorf("expected Description=%q, got %q", want.description, f.Description())
-	}
-	if f.Enabled() != want.enabled {
-    t.Errorf("expected Enabled=%v, got %v", want.enabled, f.Enabled())
-  }
-	if f.CreatedAt().IsZero() {
-    t.Errorf("CreatedAt should not be zero")
-	}
-	if f.UpdatedAt().IsZero() {
-    t.Errorf("UpdatedAt should not be zero")
+	for _, c := range cases {
+		t.Run(c.name, func(t *testing.T) {
+			f, err := NewFlag(c.envID, c.rollout, c.key, c.description, c.enabled)
+			if c.wantErr != nil {
+				if !errors.Is(err, c.wantErr) {
+					t.Errorf("expected error %v, got %v", c.wantErr, err)
+				}
+				return
+			}
+
+			if f.EnvID() != c.envID {
+				t.Errorf("expected EnvID=%d, got %d", c.envID, f.EnvID())
+			}
+			if f.Rollout() != c.rollout {
+				t.Errorf("expected Rollout=%d, got %d", c.rollout, f.Rollout())
+			}
+			if f.Key() != c.key {
+				t.Errorf("expected Key=%q, got %q", c.key, f.Key())
+			}
+			if f.Description() != c.description {
+				t.Errorf("expected Description=%q, got %q", c.description, f.Description())
+			}
+			if f.Enabled() != c.enabled {
+  		  t.Errorf("expected Enabled=%v, got %v", c.enabled, f.Enabled())
+  		}
+			if f.CreatedAt().IsZero() {
+  		  t.Errorf("CreatedAt should not be zero")
+			}
+			if f.UpdatedAt().IsZero() {
+    		t.Errorf("UpdatedAt should not be zero")
+			}
+		})
 	}
 }
