@@ -2,14 +2,23 @@ package domain
 
 import (
 	"errors"
+	"fmt"
 	"time"
 	"unicode/utf8"
 )
 
-var ErrInvalidDescription = errors.New("description must be maximum 500 characters long")
-var ErrInvalidKey =         errors.New("key must be maximum 100 characters long")
-var ErrInvalidRollout =     errors.New("rollout is out of range")
-var ErrIDAlreadySet =       errors.New("id already set")
+var (
+	ErrInvalidDescription = fmt.Errorf("description must be maximum %d characters long", MaxDescriptionLenght)
+	ErrInvalidKey =         fmt.Errorf("key must be maximum %d characters long", MaxKeyLenght)
+	ErrInvalidRollout =     errors.New("rollout is out of range")
+	ErrIDAlreadySet =       errors.New("id already set")
+)
+
+
+const (
+	MaxDescriptionLenght = 500
+	MaxKeyLenght         = 100
+)
 
 type Flag struct {
 	id          int
@@ -107,20 +116,21 @@ func (f *Flag) SetRollout(newRollout int) error {
 
 // Validators
 func validateDescription(v string) error {
-	if utf8.RuneCountInString(v) > 500 {
+	if utf8.RuneCountInString(v) > MaxDescriptionLenght {
 		return ErrInvalidDescription
 	}
 	return nil
 }
 
 func validateKey(v string) error {
-	if utf8.RuneCountInString(v) > 100 {
+	if utf8.RuneCountInString(v) > MaxKeyLenght {
 		return ErrInvalidKey
 	}
 	return nil
 }
 
 func validateRollout(v int) error {
+	// assert v to be from 0 to 100%
 	if v > 100 || v < 0 {
 		return ErrInvalidRollout
 	}
