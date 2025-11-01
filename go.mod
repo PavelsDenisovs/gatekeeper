@@ -1,3 +1,3 @@
-module github.com/PavelsDenisovs/gatekeeper
+module gatekeeper
 
 go 1.24.0
