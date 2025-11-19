@@ -3,22 +3,59 @@ package domain
 import (
 	"errors"
 	"fmt"
+	"strings"
 	"time"
 	"unicode/utf8"
 )
-
-var (
-	ErrInvalidDescription = fmt.Errorf("description must be maximum %d characters long", MaxDescriptionLenght)
-	ErrInvalidKey =         fmt.Errorf("key must be maximum %d characters long", MaxKeyLenght)
-	ErrInvalidRollout =     errors.New("rollout is out of range")
-	ErrIDAlreadySet =       errors.New("id already set")
-)
-
 
 const (
 	MaxDescriptionLenght = 500
 	MaxKeyLenght         = 100
 )
+
+var (
+	ErrInvalidDescription = fmt.Errorf("description must be maximum %d characters long", MaxDescriptionLenght)
+	ErrInvalidKey         = fmt.Errorf("key must be maximum %d characters long", MaxKeyLenght)
+	ErrInvalidRollout     = errors.New("rollout is out of range")
+)
+
+func NewValidDescription(prefix string) string {
+	padding := MaxDescriptionLenght - len(prefix)
+	if padding < 0 {
+		padding = 0
+	}
+	return prefix + strings.Repeat("X", padding)
+}
+
+func NewInvalidDescription(prefix string) string {
+	return NewValidDescription(prefix) + "X"
+}
+
+func NewValidKey(prefix string) string {
+	padding := MaxKeyLenght - len(prefix)
+	if padding < 0 {
+		padding = 0
+	}
+	return prefix + strings.Repeat("X", padding)
+}
+
+func NewInvalidKey(prefix string) string {
+	return NewValidKey(prefix) + "X"
+}
+
+type RolloutBuilder struct { 
+	count int 
+}
+
+func (b *RolloutBuilder) NewValidRollout() int {
+	b.count++
+	return b.count + 1
+}
+
+func (b *RolloutBuilder) NewInvalidRollout() int {
+	b.count++
+	return b.count + 100
+}
 
 type Flag struct {
 	id          int
